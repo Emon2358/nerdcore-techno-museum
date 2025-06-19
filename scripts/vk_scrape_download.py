@@ -9,7 +9,6 @@ def scrape_posts(owner, keyword, out_dir):
     os.makedirs(out_dir, exist_ok=True)
     base_url = f"https://vk.com/{owner}?w=wall"
     session = requests.Session()
-    # Optional: set headers to mimic browser
     session.headers.update({
         'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)'
     })
@@ -18,7 +17,6 @@ def scrape_posts(owner, keyword, out_dir):
     resp.raise_for_status()
 
     soup = BeautifulSoup(resp.text, 'html.parser')
-    # posts have id like post{owner}_{postid}
     for post_div in soup.select('div.post'):  # VK's post container class may vary
         text_elem = post_div.select_one('.wall_post_text')
         if not text_elem:
@@ -27,12 +25,10 @@ def scrape_posts(owner, keyword, out_dir):
         if keyword.lower() not in text.lower():
             continue
 
-        # find attachments
         for doc_link in post_div.select('a.share_doc'):  # adjust selector
             href = doc_link.get('href')
             title = doc_link.get_text(strip=True)
             if href and title.endswith('.zip1'):
-                # full URL
                 file_url = href if href.startswith('http') else 'https://vk.com' + href
                 print(f"Downloading {title} from {file_url}")
                 download_file(session, file_url, out_dir, title)
