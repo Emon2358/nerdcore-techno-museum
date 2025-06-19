@@ -27,16 +27,25 @@ jobs:
           pip install requests beautifulsoup4
 
       - name: Download .zip1 from VK
+        id: download
         run: |
           python scripts/vk_scrape_download.py \
             --keyword "${{ github.event.inputs.keyword }}" \
             --owner "doujinmusic" \
             --out-dir downloaded
+          ls downloaded/*.zip1 > /dev/null 2>&1
+          echo "FOUND=$?" >> $GITHUB_ENV
 
-      - name: Commit and push
+      - name: Commit and push if files exist
+        if: env.FOUND == '0'
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add downloaded/*.zip1
           git commit -m "Add downloaded .zip1 files from VK"
           git push
+
+      - name: No files found
+        if: env.FOUND != '0'
+        run: |
+          echo "No .zip1 files found, skipping commit." 
